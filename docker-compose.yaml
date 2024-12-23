@@ -5,10 +5,10 @@ services:
       context: ./
       dockerfile: Dockerfile
     environment:
-      DATABASE_NAME: chatapp
-      DATABASE_USER: mongo 
-      DATABASE_PASS: mongo
-      DATABASE_URI:  mongodb://database:27017
+      MONGO_INITDB_DATABASE_NAME: chatapp
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+      DATABASE_URI:   mongodb://root:example@mongo:27017/
     ports:
       - '4000:4000'
     depends_on:
@@ -22,5 +22,7 @@ services:
     ports:
       - '27017:27017'
     environment:
-      MONGO_INITDB_ROOT_USERNAME: chatapp
-      MONGO_INITDB_ROOT_PASSWORD: mongo
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: example
+      ME_CONFIG_MONGODB_URL: mongodb://root:example@mongo:27017/
+      ME_CONFIG_BASICAUTH: false

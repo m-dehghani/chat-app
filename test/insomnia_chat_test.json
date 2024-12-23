@@ -1,0 +1,93 @@
+{
+    "resources": [
+      {
+        "_id": "req_1",
+        "parentId": "fld_1",
+        "modified": 0,
+        "created": 0,
+        "url": "http://localhost:3000/chat/room",
+        "name": "Create Chat Room",
+        "description": "",
+        "method": "POST",
+        "body": {
+          "mimeType": "application/json",
+          "text": "{\"name\": \"Test Room\"}"
+        }
+      },
+      {
+        "_id": "req_2",
+        "parentId": "fld_1",
+        "modified": 0,
+        "created": 0,
+        "url": "http://localhost:3000/chat/room/someid/join",
+        "name": "Join Chat Room",
+        "description": "",
+        "method": "POST",
+        "body": {
+          "mimeType": "application/json",
+          "text": "{\"userId\": \"someUserId\"}"
+        }
+      },
+      {
+        "_id": "req_3",
+        "parentId": "fld_1",
+        "modified": 0,
+        "created": 0,
+        "url": "http://localhost:3000/chat/message",
+        "name": "Send Message",
+        "description": "",
+        "method": "POST",
+        "body": {
+          "mimeType": "application/json",
+          "text": "{\"roomId\": \"someid\", \"userId\": \"someUserId\", \"author\": \"Author\", \"content\": \"Test message\"}"
+        }
+      },
+      {
+        "_id": "req_4",
+        "parentId": "fld_1",
+        "modified": 0,
+        "created": 0,
+        "url": "http://localhost:3000/chat/message/someid",
+        "name": "Update Message",
+        "description": "",
+        "method": "PUT",
+        "body": {
+          "mimeType": "application/json",
+          "text": "{\"userId\": \"someUserId\", \"content\": \"Updated message\"}"
+        }
+      },
+      {
+        "_id": "req_5",
+        "parentId": "fld_1",
+        "modified": 0,
+        "created": 0,
+        "url": "http://localhost:3000/chat/message/someid",
+        "name": "Delete Message",
+        "description": "",
+        "method": "DELETE",
+        "body": {
+          "mimeType": "application/json",
+          "text": "{\"userId\": \"someUserId\"}"
+        }
+      },
+      {
+        "_id": "req_6",
+        "parentId": "fld_1",
+        "modified": 0,
+        "created": 0,
+        "url": "http://localhost:3000/chat/messages/someid",
+        "name": "Get Messages",
+        "description": "",
+        "method": "GET",
+        "body": {
+          "mimeType": "application/json",
+          "text": "{\"userId\": \"someUserId\"}"
+        }
+      }
+    ],
+    "_type": "export",
+    "__export_format": 4,
+    "__export_date": "2024-12-23T22:27:00.000Z",
+    "__export_source": "insomnia.desktop.app:v2023.5.0"
+  }
+  
