@@ -4,7 +4,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Schema as MongooseSchema } from 'mongoose';
 import { ChatRoom } from './schemas/chatroom.schema';
 import { Message } from './schemas/message.schema';
 import { EventEmitter2 } from 'eventemitter2';
@@ -27,9 +27,10 @@ export class ChatService {
     if (!room) {
       throw new BadRequestException('Chat room not found');
     }
+    const userObjectId = new MongooseSchema.Types.ObjectId(userId);
 
-    if (!room.users.includes(userId)) {
-      room.users.push(userId);
+    if (!room.users.includes(userObjectId)) {
+      room.users.push(userObjectId);
       await room.save();
     }
 
@@ -46,8 +47,9 @@ export class ChatService {
     if (!room) {
       throw new BadRequestException('Chat room not found');
     }
+    const userObjectId = new MongooseSchema.Types.ObjectId(userId);
 
-    if (!room.users.includes(userId)) {
+    if (!room.users.includes(userObjectId)) {
       throw new ForbiddenException('Access denied');
     }
 
@@ -68,7 +70,9 @@ export class ChatService {
     }
 
     const room = await this.chatRoomModel.findById(message.roomId).exec();
-    if (!room.users.includes(userId)) {
+    const userObjectId = new MongooseSchema.Types.ObjectId(userId);
+
+    if (!room.users.includes(userObjectId)) {
       throw new ForbiddenException('Access denied');
     }
 
@@ -85,7 +89,8 @@ export class ChatService {
     }
 
     const room = await this.chatRoomModel.findById(message.roomId).exec();
-    if (!room.users.includes(userId)) {
+    const userObjectId = new MongooseSchema.Types.ObjectId(userId);
+    if (!room.users.includes(userObjectId)) {
       throw new ForbiddenException('Access denied');
     }
 
@@ -100,7 +105,8 @@ export class ChatService {
 
   async getMessages(roomId: string, userId: string): Promise<Message[]> {
     const room = await this.chatRoomModel.findById(roomId).exec();
-    if (!room.users.includes(userId)) {
+    const userObjectId = new MongooseSchema.Types.ObjectId(userId);
+    if (!room.users.includes(userObjectId)) {
       throw new ForbiddenException('Access denied');
     }
     return this.messageModel.find({ roomId }).exec();
