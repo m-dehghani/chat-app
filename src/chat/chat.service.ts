@@ -4,7 +4,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Schema as MongooseSchema } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { ChatRoom } from './schemas/chatroom.schema';
 import { Message } from './schemas/message.schema';
 import { EventEmitter2 } from 'eventemitter2';
@@ -22,15 +22,14 @@ export class ChatService {
     return newRoom.save();
   }
 
-  async joinRoom(roomId: string, userId: string): Promise<ChatRoom> {
+  async joinRoom(roomId: string, userId: Types.ObjectId): Promise<ChatRoom> {
     const room = await this.chatRoomModel.findById(roomId).exec();
     if (!room) {
       throw new BadRequestException('Chat room not found');
     }
-    const userObjectId = new MongooseSchema.Types.ObjectId(userId);
 
-    if (!room.users.includes(userObjectId)) {
-      room.users.push(userObjectId);
+    if (!room.users.includes(userId)) {
+      room.users.push(userId);
       await room.save();
     }
 
@@ -39,7 +38,7 @@ export class ChatService {
 
   async sendMessage(
     roomId: string,
-    userId: string,
+    userId: Types.ObjectId,
     author: string,
     content: string,
   ): Promise<Message> {
@@ -47,9 +46,8 @@ export class ChatService {
     if (!room) {
       throw new BadRequestException('Chat room not found');
     }
-    const userObjectId = new MongooseSchema.Types.ObjectId(userId);
 
-    if (!room.users.includes(userObjectId)) {
+    if (!room.users.includes(userId)) {
       throw new ForbiddenException('Access denied');
     }
 
@@ -61,7 +59,7 @@ export class ChatService {
 
   async updateMessage(
     messageId: string,
-    userId: string,
+    userId: Types.ObjectId,
     content: string,
   ): Promise<Message> {
     const message = await this.messageModel.findById(messageId).exec();
@@ -70,9 +68,7 @@ export class ChatService {
     }
 
     const room = await this.chatRoomModel.findById(message.roomId).exec();
-    const userObjectId = new MongooseSchema.Types.ObjectId(userId);
-
-    if (!room.users.includes(userObjectId)) {
+    if (!room.users.includes(userId)) {
       throw new ForbiddenException('Access denied');
     }
 
@@ -82,15 +78,17 @@ export class ChatService {
     return updatedMessage;
   }
 
-  async deleteMessage(messageId: string, userId: string): Promise<Message> {
+  async deleteMessage(
+    messageId: string,
+    userId: Types.ObjectId,
+  ): Promise<Message> {
     const message = await this.messageModel.findById(messageId).exec();
     if (!message) {
       throw new BadRequestException('Message not found');
     }
 
     const room = await this.chatRoomModel.findById(message.roomId).exec();
-    const userObjectId = new MongooseSchema.Types.ObjectId(userId);
-    if (!room.users.includes(userObjectId)) {
+    if (!room.users.includes(userId)) {
       throw new ForbiddenException('Access denied');
     }
 
@@ -103,10 +101,12 @@ export class ChatService {
     return deletedMessage;
   }
 
-  async getMessages(roomId: string, userId: string): Promise<Message[]> {
+  async getMessages(
+    roomId: string,
+    userId: Types.ObjectId,
+  ): Promise<Message[]> {
     const room = await this.chatRoomModel.findById(roomId).exec();
-    const userObjectId = new MongooseSchema.Types.ObjectId(userId);
-    if (!room.users.includes(userObjectId)) {
+    if (!room.users.includes(userId)) {
       throw new ForbiddenException('Access denied');
     }
     return this.messageModel.find({ roomId }).exec();

@@ -6,7 +6,6 @@ import {
   Body,
   Param,
   Get,
-  ForbiddenException,
 } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { ChatRoom } from './schemas/chatroom.schema';
@@ -18,6 +17,7 @@ import {
   MessageBody,
 } from '@nestjs/websockets';
 import { Server } from 'socket.io';
+import { ObjectId } from 'mongoose';
 
 @Controller('chat')
 export class ChatController {
@@ -31,7 +31,7 @@ export class ChatController {
   @Post('room/:id/join')
   async joinRoom(
     @Param('id') id: string,
-    @Body('userId') userId: string,
+    @Body('userId') userId: ObjectId,
   ): Promise<ChatRoom> {
     return this.chatService.joinRoom(id, userId);
   }
@@ -39,7 +39,7 @@ export class ChatController {
   @Post('message')
   async sendMessage(
     @Body('roomId') roomId: string,
-    @Body('userId') userId: string,
+    @Body('userId') userId: ObjectId,
     @Body('author') author: string,
     @Body('content') content: string,
   ): Promise<Message> {
@@ -49,7 +49,7 @@ export class ChatController {
   @Put('message/:id')
   async updateMessage(
     @Param('id') messageId: string,
-    @Body('userId') userId: string,
+    @Body('userId') userId: ObjectId,
     @Body('content') content: string,
   ): Promise<Message> {
     return this.chatService.updateMessage(messageId, userId, content);
@@ -58,7 +58,7 @@ export class ChatController {
   @Delete('message/:id')
   async deleteMessage(
     @Param('id') messageId: string,
-    @Body('userId') userId: string,
+    @Body('userId') userId: ObjectId,
   ): Promise<Message> {
     return this.chatService.deleteMessage(messageId, userId);
   }
@@ -66,7 +66,7 @@ export class ChatController {
   @Get('messages/:roomId')
   async getMessages(
     @Param('roomId') roomId: string,
-    @Body('userId') userId: string,
+    @Body('userId') userId: ObjectId,
   ): Promise<Message[]> {
     return this.chatService.getMessages(roomId, userId);
   }
