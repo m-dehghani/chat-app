@@ -1,114 +1,135 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
-import { AppModule } from '../app.module';
+import { getModelToken } from '@nestjs/mongoose';
+import { Model, Schema as MongooseSchema } from 'mongoose';
 import { ChatService } from './chat.service';
+import { ChatRoom } from './schemas/chatroom.schema';
+import { Message } from './schemas/message.schema';
+import { EventEmitter2 } from 'eventemitter2';
 
-describe('ChatController (e2e)', () => {
-  let app: INestApplication;
-  const chatService = {
-    createRoom: jest
-      .fn()
-      .mockResolvedValue({ name: 'Test Room', _id: 'someid', users: [] }),
-    joinRoom: jest.fn().mockResolvedValue({
-      name: 'Test Room',
-      _id: 'someid',
-      users: ['someUserId'],
-    }),
-    sendMessage: jest.fn().mockResolvedValue({
-      roomId: 'someid',
-      author: 'Author',
-      content: 'Test message',
-      timestamp: new Date(),
-    }),
-    updateMessage: jest.fn().mockResolvedValue({
-      roomId: 'someid',
-      author: 'Author',
-      content: 'Updated message',
-      timestamp: new Date(),
-    }),
-    deleteMessage: jest.fn().mockResolvedValue({
-      roomId: 'someid',
-      author: 'Author',
-      content: 'Test message',
-      timestamp: new Date(),
-    }),
-    getMessages: jest.fn().mockResolvedValue([
-      {
-        roomId: 'someid',
-        author: 'Author',
-        content: 'Test message',
-        timestamp: new Date(),
-      },
-    ]),
-  };
+const mockChatRoom = {
+  name: 'Test Room',
+  users: [],
+  _id: '507f191e810c19729de860ea',
+  save: jest.fn().mockResolvedValue(this),
+};
 
-  beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    })
-      .overrideProvider(ChatService)
-      .useValue(chatService)
-      .compile();
+const mockMessage = {
+  roomId: '507f191e810c19729de860ea',
+  author: 'Author',
+  content: 'Test message',
+  timestamp: new Date(),
+};
 
-    app = moduleFixture.createNestApplication();
-    await app.init();
+describe('ChatService', () => {
+  let service: ChatService;
+  let messageModel: Model<Message>;
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        ChatService,
+        {
+          provide: getModelToken(ChatRoom.name),
+          useValue: {
+            new: jest.fn().mockResolvedValue(mockChatRoom),
+            constructor: jest.fn().mockResolvedValue(mockChatRoom),
+            findById: jest.fn().mockReturnValue({
+              exec: jest.fn().mockResolvedValue(mockChatRoom),
+            }),
+            save: jest.fn(),
+          },
+        },
+        {
+          provide: getModelToken(Message.name),
+          useValue: {
+            find: jest.fn(),
+            findById: jest.fn().mockReturnValue({
+              exec: jest.fn().mockResolvedValue(mockMessage),
+            }),
+            findByIdAndUpdate: jest.fn().mockReturnValue({
+              exec: jest.fn().mockResolvedValue(mockMessage),
+            }),
+            findByIdAndDelete: jest.fn().mockReturnValue({
+              exec: jest.fn().mockResolvedValue(mockMessage),
+            }),
+            save: jest.fn(),
+          },
+        },
+        EventEmitter2,
+      ],
+    }).compile();
+
+    service = module.get<ChatService>(ChatService);
+    messageModel = module.get<Model<Message>>(getModelToken(Message.name));
   });
 
-  it('/chat/room (POST) should create a new chat room', () => {
-    return request(app.getHttpServer())
-      .post('/chat/room')
-      .send({ name: 'Test Room' })
-      .expect(201)
-      .expect(chatService.createRoom());
+  it('should be defined', () => {
+    expect(service).toBeDefined();
   });
 
-  it('/chat/room/:id/join (POST) should join a chat room', () => {
-    return request(app.getHttpServer())
-      .post('/chat/room/someid/join')
-      .send({ userId: 'someUserId' })
-      .expect(201)
-      .expect(chatService.joinRoom());
+  it('should create a chat room', async () => {
+    const result = await service.createRoom('Test Room');
+    expect(result).toEqual(mockChatRoom);
   });
 
-  it('/chat/message (POST) should send a message', () => {
-    return request(app.getHttpServer())
-      .post('/chat/message')
-      .send({
-        roomId: 'someid',
-        userId: 'someUserId',
-        author: 'Author',
-        content: 'Test message',
-      })
-      .expect(201)
-      .expect(chatService.sendMessage());
+  it('should join a chat room', async () => {
+    const userObjectId = new MongooseSchema.Types.ObjectId(
+      '507f191e810c19729de860ea',
+    );
+    const result = await service.joinRoom(
+      '507f191e810c19729de860ea',
+      userObjectId,
+    );
+    expect(result).toEqual(mockChatRoom);
   });
 
-  it('/chat/message/:id (PUT) should update a message', () => {
-    return request(app.getHttpServer())
-      .put('/chat/message/someid')
-      .send({ userId: 'someUserId', content: 'Updated message' })
-      .expect(200)
-      .expect(chatService.updateMessage());
+  it('should send a message', async () => {
+    const userObjectId = new MongooseSchema.Types.ObjectId(
+      '507f191e810c19729de860ea',
+    );
+    const result = await service.sendMessage(
+      '507f191e810c19729de860ea',
+      userObjectId,
+      'Author',
+      'Test message',
+    );
+    expect(result).toEqual(mockMessage);
   });
 
-  it('/chat/message/:id (DELETE) should delete a message', () => {
-    return request(app.getHttpServer())
-      .delete('/chat/message/someid')
-      .send({ userId: 'someUserId' })
-      .expect(200)
-      .expect(chatService.deleteMessage());
+  it('should update a message', async () => {
+    const userObjectId = new MongooseSchema.Types.ObjectId(
+      '507f191e810c19729de860ea',
+    );
+    const result = await service.updateMessage(
+      '507f191e810c19729de860ea',
+      userObjectId,
+      'Updated message',
+    );
+    expect(result).toEqual(mockMessage);
   });
 
-  it('/chat/messages/:roomId (GET) should get messages from a chat room', () => {
-    return request(app.getHttpServer())
-      .get('/chat/messages/someid')
-      .send({ userId: 'someUserId' })
-      .expect(200)
-      .expect(chatService.getMessages());
+  it('should delete a message', async () => {
+    const userObjectId = new MongooseSchema.Types.ObjectId(
+      '507f191e810c19729de860ea',
+    );
+    const result = await service.deleteMessage(
+      '507f191e810c19729de860ea',
+      userObjectId,
+    );
+    expect(result).toEqual(mockMessage);
   });
 
-  afterAll(async () => {
-    await app.close();
+  it('should get messages from a chat room', async () => {
+    jest.spyOn(messageModel, 'find').mockReturnValue({
+      exec: jest.fn().mockResolvedValue([mockMessage]),
+    } as any);
+    const userObjectId = new MongooseSchema.Types.ObjectId(
+      '507f191e810c19729de860ea',
+    );
+    const result = await service.getMessages(
+      '507f191e810c19729de860ea',
+      userObjectId,
+    );
+    expect(result).toEqual([mockMessage]);
   });
 });

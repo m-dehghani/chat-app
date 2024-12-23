@@ -71,7 +71,6 @@ export class ChatService {
     }
 
     const room = await this.chatRoomModel.findById(message.roomId).exec();
-
     if (!room.users.includes(userId)) {
       throw new ForbiddenException('Access denied');
     }
@@ -110,7 +109,6 @@ export class ChatService {
     userId: MongooseSchema.Types.ObjectId,
   ): Promise<Message[]> {
     const room = await this.chatRoomModel.findById(roomId).exec();
-
     if (!room.users.includes(userId)) {
       throw new ForbiddenException('Access denied');
     }

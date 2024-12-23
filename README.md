@@ -4,6 +4,10 @@ Backend application for managing chats and rooms
 
 ## Project setup
 
+```docker
+docker-compose up
+```
+
 ```bash
 npm install
 ```
