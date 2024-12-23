@@ -4,7 +4,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { Model, Schema as MongooseSchema } from 'mongoose';
 import { ChatRoom } from './schemas/chatroom.schema';
 import { Message } from './schemas/message.schema';
 import { EventEmitter2 } from 'eventemitter2';
@@ -22,7 +22,10 @@ export class ChatService {
     return newRoom.save();
   }
 
-  async joinRoom(roomId: string, userId: Types.ObjectId): Promise<ChatRoom> {
+  async joinRoom(
+    roomId: string,
+    userId: MongooseSchema.Types.ObjectId,
+  ): Promise<ChatRoom> {
     const room = await this.chatRoomModel.findById(roomId).exec();
     if (!room) {
       throw new BadRequestException('Chat room not found');
@@ -38,7 +41,7 @@ export class ChatService {
 
   async sendMessage(
     roomId: string,
-    userId: Types.ObjectId,
+    userId: MongooseSchema.Types.ObjectId,
     author: string,
     content: string,
   ): Promise<Message> {
@@ -59,7 +62,7 @@ export class ChatService {
 
   async updateMessage(
     messageId: string,
-    userId: Types.ObjectId,
+    userId: MongooseSchema.Types.ObjectId,
     content: string,
   ): Promise<Message> {
     const message = await this.messageModel.findById(messageId).exec();
@@ -68,6 +71,7 @@ export class ChatService {
     }
 
     const room = await this.chatRoomModel.findById(message.roomId).exec();
+
     if (!room.users.includes(userId)) {
       throw new ForbiddenException('Access denied');
     }
@@ -80,7 +84,7 @@ export class ChatService {
 
   async deleteMessage(
     messageId: string,
-    userId: Types.ObjectId,
+    userId: MongooseSchema.Types.ObjectId,
   ): Promise<Message> {
     const message = await this.messageModel.findById(messageId).exec();
     if (!message) {
@@ -103,9 +107,10 @@ export class ChatService {
 
   async getMessages(
     roomId: string,
-    userId: Types.ObjectId,
+    userId: MongooseSchema.Types.ObjectId,
   ): Promise<Message[]> {
     const room = await this.chatRoomModel.findById(roomId).exec();
+
     if (!room.users.includes(userId)) {
       throw new ForbiddenException('Access denied');
     }
